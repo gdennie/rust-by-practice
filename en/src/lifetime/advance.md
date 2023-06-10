@@ -2,8 +2,8 @@
 
 ## Trait Bounds
 Just like generic types can be bounded, lifetimes can also be bounded as below:
-- `T: 'a`，all references in `T` must outlive the lifetime `'a`
-- `T: Trait + 'a`: `T` must implement trait `Trait` and all references in `T` must outlive `'a`
+- `T: 'a`，`T` must live as at least as long as `'a`
+- `T: Trait + 'a`: `T` must implement trait `Trait` and `T` must at least as long as `'a`
 
 **Example**
 ```rust,editable
@@ -11,10 +11,10 @@ use std::fmt::Debug; // Trait to bound with.
 
 #[derive(Debug)]
 struct Ref<'a, T: 'a>(&'a T);
-// `Ref` contains a reference to a generic type `T` that has
-// an unknown lifetime `'a`. `T` is bounded such that any
-// *references* in `T` must outlive `'a`. Additionally, the lifetime
-// of `Ref` may not exceed `'a`.
+// `Ref` is generic over lifetime `'a` and `T`.
+// `T` lives at least as long as `'a`. 
+// `Ref` wraps a *reference* to `T` that must
+// not live longer than `'a`
 
 // A generic function which prints using the `Debug` trait.
 fn print<T>(t: T) where
@@ -23,8 +23,8 @@ fn print<T>(t: T) where
 }
 
 // Here a reference to `T` is taken where `T` implements
-// `Debug` and all *references* in `T` outlive `'a`. In
-// addition, `'a` must outlive the function.
+// `Debug` and *reference* to `T` lives at least as long
+// as `'a`. In addition, `'a` must outlive the function.
 fn print_ref<'a, T>(t: &'a T) where
     T: Debug + 'a {
     println!("`print_ref`: t is {:?}", t);
@@ -88,7 +88,10 @@ fn main() {
 ```
 
 ## HRTB(Higher-ranked trait bounds)
-Type bounds may be higher ranked over lifetimes. These bounds specify a bound is true for all lifetimes. For example, a bound such as `for<'a> &'a T: PartialEq<i32>` would require an implementation like: 
+Type bounds may be higher ranked over lifetimes. 
+These bounds specify a bound that is true for all lifetimes. 
+For example, a bound such as `for<'a> &'a T: PartialEq<i32>` 
+would require an implementation like the following: 
 
 ```rust
 impl<'a> PartialEq<i32> for &'a T {
@@ -96,7 +99,7 @@ impl<'a> PartialEq<i32> for &'a T {
 }
 ```
 
-and could then be used to compare a `&'a T` with any lifetime to an `i32`.
+and could then be used to compare `&'a T` with any lifetime to an `i32`.
 
 Only a higher-ranked bound can be used here, because the lifetime of the reference is shorter than any possible lifetime parameter on the function.
 
